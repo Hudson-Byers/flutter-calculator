@@ -43,7 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void onButtonPressed(String char) {
     if (isResultDisplayed) return; // Block input after result
 
-    bool isOperator(String c) => "+-*/".contains(c);
+    bool isOperator(String c) => "+-*/%".contains(c); // Add %
 
     // Prevent multiple operators in a row
     if (isOperator(char)) {
@@ -51,14 +51,17 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (char == "=") {
-      // Use expressions package to evaluate
       String formattedResult;
       try {
-        // Remove any trailing operator before evaluating
         String expr = displayEquation;
         if (expr.isNotEmpty && isOperator(expr.characters.last)) {
           expr = expr.substring(0, expr.length - 1);
         }
+        // Replace all instances of a % b with (a % b)
+        expr = expr.replaceAllMapped(
+          RegExp(r'(\d+(?:\.\d+)?)\s*%\s*(\d+(?:\.\d+)?)'),
+          (match) => '(${match.group(1)} % ${match.group(2)})'
+        );
         Expression exp = Expression.parse(expr);
         final evaluator = const ExpressionEvaluator();
         var context = <String, dynamic>{};
@@ -87,9 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // Helper to recursively solve and return result as string list
-  // No longer needed with expressions package
-
   void clear() {
     setState(() {
       displayEquation = "";
@@ -97,8 +97,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
   
-  // Removed old enter and parse methods (no longer needed)
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,8 +106,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: Container(
-          height: 400,
-          width: 350,
+          height: 350,
+          width: 300,
           decoration: BoxDecoration(
             color: Colors.purple[50],
             borderRadius: BorderRadius.circular(12),
@@ -183,6 +181,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     StyledButton(child: const Text("C"), onPressed: clear),
                     StyledButton(child: const Text("+"), onPressed: () => onButtonPressed("+")),
                   ]
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    StyledButton(child: const Text("%"), onPressed: () => onButtonPressed("%")),
+                  ],
                 ),
               ],
             ),
